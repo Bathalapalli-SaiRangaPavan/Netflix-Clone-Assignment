@@ -352,12 +352,34 @@ To successfully deploy the Netflix clone application using a DevSecOps approach,
      ```bash
      trivy --version
      ```
+# Step 3: Create a TMDB API Key
 
+Next, we will create a TMDB API key.
 
+1. **Open TMDB Website**
+   - Open a new tab in your browser and search for **TMDB** or go directly to [TMDB's website](https://www.themoviedb.org/).
 
+2. **Log In**
+   - Click on the **Login** button located at the top right corner of the page.
 
+3. **Create an Account**
+   - If you don't have an account, click on **Sign up here** or **Create an Account**.
+   - Follow the instructions to create an account. If you already have an account, simply log in with your credentials.
 
+4. **Access API Settings**
+   - Once logged in, click on your profile icon located at the top right corner of the page.
+   - From the dropdown menu, click on **Settings**.
 
+5. **Create an API Key**
+   - In the settings menu on the left, click on **API**.
 
+6. **Generate API Key**
+   - Click on the **Create** button.
+   - Select **Developer** for the type of API key.
+   - You will be asked to accept the terms and conditions. Read and accept them to proceed.
 
+7. **Provide Basic Details**
+   - You may be asked to provide additional details such as your address and country. Fill in these fields as required to complete the API key request.
 
+8. **Copy Your API Key**
+   - Once created, your API key will be displayed. Copy this key as you will need it to make API requests.
