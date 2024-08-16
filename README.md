@@ -1309,9 +1309,9 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh "docker build --build-arg TMDB_V3_API_KEY=Aj7ay86fe14eca3e76869b92 -t netflix ."
-                        sh "docker tag netflix btppavan/netflix:latest"
-                        sh "docker push btppavan/netflix:latest"
+                        sh "docker build --build-arg TMDB_V3_API_KEY=9e7e0d7ffdd5bda739af5bea6f8aa7e1 -t netflix ."
+                        sh "docker tag netflix btppavan/netflix:1.0"
+                        sh "docker push btppavan/netflix:1.0"
                     }
                 }
             }
@@ -1323,7 +1323,7 @@ pipeline {
         }
         stage('Deploy to Container') {
             steps {
-                sh 'docker run -d --name netflix -p 8081:80 btppavan/netflix:latest'
+                sh 'docker run -d --name netflix -p 8081:80 btppavan/netflix:1.0'
             }
         }
     }
@@ -1339,6 +1339,7 @@ pipeline {
         }
     }
 }
+
 ```
 
 ![Screenshot (136)](https://github.com/user-attachments/assets/45176329-41b0-497c-8d9d-0e4578091161)
@@ -1368,5 +1369,9 @@ pipeline {
 
 -  A notification email was received confirming the successful completion of the build.
 ![Screenshot (147)](https://github.com/user-attachments/assets/3e0cdb4a-61be-4583-8d1b-0440aed68efc)
+
+- You can successfully view the output
+
+![Screenshot (152)](https://github.com/user-attachments/assets/9b7e5f51-e4e9-43a2-ab2c-46731b9f0988)
 
 
