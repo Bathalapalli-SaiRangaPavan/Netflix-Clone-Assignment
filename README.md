@@ -98,37 +98,37 @@ To successfully deploy the Netflix clone application using a DevSecOps approach,
 
 # Step 1: Launch and Access an Ubuntu 22.04 T2 Large Instance on AWS
 
-## 1. Sign In to AWS Management Console
+### 1. Sign In to AWS Management Console
 - Go to the [AWS Management Console](https://aws.amazon.com/console/) and sign in with your credentials.
 
-## 2. Navigate to EC2 Dashboard
+### 2. Navigate to EC2 Dashboard
 - In the AWS Management Console, select **EC2** from the Services menu.
 
-## 3. Launch an Instance
+### 3. Launch an Instance
 - Click the **Launch Instance** button.
 
-## 4. Choose an Amazon Machine Image (AMI)
+### 4. Choose an Amazon Machine Image (AMI)
 - In the **Choose an Amazon Machine Image (AMI)** section, search for **Ubuntu 22.04**.
 - Select the Ubuntu 22.04 AMI from the list.
 
-## 5. Choose an Instance Type
+### 5. Choose an Instance Type
 - In the **Choose an Instance Type** section, select **t2.large**.
 - Click **Next: Configure Instance Details**.
 
-## 6. Configure Instance Details
+### 6. Configure Instance Details
 - Scroll down to the **Advanced Details** section.
 - Click **Next: Add Storage**.
 
-## 7. Add Storage
+### 7. Add Storage
 - The default storage might be set to a different size. Click **Add New Volume** if needed.
 - Set the **Size** to **30 GiB**.
 - Ensure the **Volume Type** is set to **General Purpose SSD (gp3)**.
 - Click **Next: Add Tags**.
 
-## 8. Add Tags (Optional)
+### 8. Add Tags (Optional)
 - Add tags to help identify the instance, then click **Next: Configure Security Group**.
 
-## 9. Configure Security Group
+### 9. Configure Security Group
 - **Create a new security group** or select an existing one.
 - **Add the following rules** for educational or project-specific use:
   - **Type:** HTTP
@@ -145,50 +145,50 @@ To successfully deploy the Netflix clone application using a DevSecOps approach,
     - **Source:** Anywhere (0.0.0.0/0) *(For project-specific use only; adjust as needed for security in organizational or production environments.)*
 - Click **Review and Launch**.
 
-## 10. Review and Launch
+### 10. Review and Launch
 - Review your settings and click **Launch**.
 - You will be prompted to **Select a key pair**:
   - Choose **Create a new key pair** or **Select an existing key pair**.
   - If creating a new key pair, download the key pair file (.pem) and keep it safe.
 - Click **Launch Instances**.
 
-## 11. View Your Instance
+### 11. View Your Instance
 - Click **View Instances** to go to the EC2 dashboard and see your newly launched instance.
 
-## 12. Download and Install MobaXterm
+### 12. Download and Install MobaXterm
 - If you haven't already, download and install MobaXterm from the [official website](https://mobaxterm.mobatek.net/download.html).
 
-## 13. Obtain Your EC2 Instance Public IP Address
+### 13. Obtain Your EC2 Instance Public IP Address
 - In the AWS Management Console, go to the **EC2 Dashboard**.
 - Select your instance from the list.
 - Find the **Public IPv4 address** in the instance details and copy it.
 
-## 14. Open MobaXterm
+### 14. Open MobaXterm
 - Launch MobaXterm on your computer.
 
-## 15. Create a New SSH Session
+### 15. Create a New SSH Session
 - Click on the **Session** button in the top-left corner of MobaXterm.
 
-## 16. Configure SSH Session
+### 16. Configure SSH Session
 - In the **Session settings** window, select **SSH**.
 - In the **Remote host** field, paste the **Public IPv4 address** of your EC2 instance.
 - Ensure the **Specify username** field is set to `ubuntu` (for Ubuntu instances).
 
-## 17. Add Your Key Pair
+### 17. Add Your Key Pair
 - Click on the **Advanced SSH settings** tab.
 - Check the box for **Use private key**.
 - Click the **...** button next to the field and navigate to the location of your **.pem** key file.
 - Select your key file and click **Open**.
 
-## 18. Start the Session
+### 18. Start the Session
 - Click **OK** to start the SSH session.
 - MobaXterm will use the provided key file to authenticate and log you in to the EC2 instance.
 
-## 19. Verify Connection
+### 19. Verify Connection
 - You should now see the command-line interface of your EC2 instance in MobaXterm.
 - You can run commands and interact with your instance as needed.
 
-## Step 2: Install Jenkins, Docker, SonarQube and Trivy on Your AWS EC2 Instance
+# Step 2: Install Jenkins, Docker, SonarQube and Trivy on Your AWS EC2 Instance
 
 ### 1. Switch to Superuser
    - Run the following command to switch to superuser:
@@ -383,3 +383,348 @@ Next, we will create a TMDB API key.
 
 8. **Copy Your API Key**
    - Once created, your API key will be displayed. Copy this key as you will need it to make API requests.
+
+# Step 4: Install Prometheus and Grafana on a New Server
+
+## Set Up the Server
+
+### a. Server Specifications
+
+- **Operating System:** Ubuntu 22.04
+- **Instance Type:** t2.medium
+- **Memory:** 12 GB (optional, depending on your needs)
+- **Purpose:**
+  - Running applications
+  - Monitoring Jenkins
+  - Monitoring a Kubernetes cluster
+
+### b. Security Group Configuration
+
+- **Security Group:** 
+  - Select the security group that was used when creating the previous machine (the one where Jenkins is installed). 
+  - This ensures consistent access and security rules across your setup.
+ 
+### C. Login to Server using Mobaxterm by providing details.
+
+```
+sudo apt-get update -y
+```
+
+ **Installing Prometheus:**
+
+   First, create a dedicated Linux user for Prometheus and download Prometheus:
+
+   ```bash
+   sudo useradd --system --no-create-home --shell /bin/false prometheus
+   wget https://github.com/prometheus/prometheus/releases/download/v2.47.1/prometheus-2.47.1.linux-amd64.tar.gz
+   ```
+
+   Extract Prometheus files, move them, and create directories:
+
+   ```bash
+   tar -xvf prometheus-2.47.1.linux-amd64.tar.gz
+   cd prometheus-2.47.1.linux-amd64/
+   sudo mkdir -p /data /etc/prometheus
+   sudo mv prometheus promtool /usr/local/bin/
+   sudo mv consoles/ console_libraries/ /etc/prometheus/
+   sudo mv prometheus.yml /etc/prometheus/prometheus.yml
+   ```
+
+   Set ownership for directories:
+
+   ```bash
+   sudo chown -R prometheus:prometheus /etc/prometheus/ /data/
+   ```
+
+   Create a systemd unit configuration file for Prometheus:
+
+   ```bash
+   sudo nano /etc/systemd/system/prometheus.service
+   ```
+
+   Add the following content to the `prometheus.service` file:
+
+   ```plaintext
+   [Unit]
+   Description=Prometheus
+   Wants=network-online.target
+   After=network-online.target
+
+   StartLimitIntervalSec=500
+   StartLimitBurst=5
+
+   [Service]
+   User=prometheus
+   Group=prometheus
+   Type=simple
+   Restart=on-failure
+   RestartSec=5s
+   ExecStart=/usr/local/bin/prometheus \
+     --config.file=/etc/prometheus/prometheus.yml \
+     --storage.tsdb.path=/data \
+     --web.console.templates=/etc/prometheus/consoles \
+     --web.console.libraries=/etc/prometheus/console_libraries \
+     --web.listen-address=0.0.0.0:9090 \
+     --web.enable-lifecycle
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Here's a brief explanation of the key parts in this `prometheus.service` file:
+
+   - `User` and `Group` specify the Linux user and group under which Prometheus will run.
+
+   - `ExecStart` is where you specify the Prometheus binary path, the location of the configuration file (`prometheus.yml`), the storage directory, and other settings.
+
+   - `web.listen-address` configures Prometheus to listen on all network interfaces on port 9090.
+
+   - `web.enable-lifecycle` allows for management of Prometheus through API calls.
+
+   Enable and start Prometheus:
+
+   ```bash
+   sudo systemctl enable prometheus
+   sudo systemctl start prometheus
+   ```
+
+   Verify Prometheus's status:
+
+   ```bash
+   sudo systemctl status prometheus
+   ```
+
+   You can access Prometheus in a web browser using your server's IP and port 9090:
+
+   `http://<your-server-ip>:9090`
+
+![Screenshot (38)](https://github.com/user-attachments/assets/3efdbe60-7cf8-4d08-8257-3371eeb71b37)
+![Screenshot (39)](https://github.com/user-attachments/assets/82190639-a82f-44eb-9b74-5c69a8e63bcb)
+![Screenshot (40)](https://github.com/user-attachments/assets/5c685be8-bf5a-467f-8da0-db5bfa11c7fc)
+
+
+
+
+
+   **Installing Node Exporter:**
+
+   Create a system user for Node Exporter and download Node Exporter:
+
+   ```bash
+   sudo useradd --system --no-create-home --shell /bin/false node_exporter
+   wget https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+   ```
+
+   Extract Node Exporter files, move the binary, and clean up:
+
+   ```bash
+   tar -xvf node_exporter-1.6.1.linux-amd64.tar.gz
+   sudo mv node_exporter-1.6.1.linux-amd64/node_exporter /usr/local/bin/
+   rm -rf node_exporter*
+   ```
+
+   Create a systemd unit configuration file for Node Exporter:
+
+   ```bash
+   sudo nano /etc/systemd/system/node_exporter.service
+   ```
+
+   Add the following content to the `node_exporter.service` file:
+
+   ```plaintext
+   [Unit]
+   Description=Node Exporter
+   Wants=network-online.target
+   After=network-online.target
+
+   StartLimitIntervalSec=500
+   StartLimitBurst=5
+
+   [Service]
+   User=node_exporter
+   Group=node_exporter
+   Type=simple
+   Restart=on-failure
+   RestartSec=5s
+   ExecStart=/usr/local/bin/node_exporter --collector.logind
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Replace `--collector.logind` with any additional flags as needed.
+
+   Enable and start Node Exporter:
+
+   ```bash
+   sudo systemctl enable node_exporter
+   sudo systemctl start node_exporter
+   ```
+
+   Verify the Node Exporter's status:
+
+   ```bash
+   sudo systemctl status node_exporter
+   ```
+
+   You can access Node Exporter metrics in Prometheus.
+
+   
+![Screenshot (46)](https://github.com/user-attachments/assets/f031d97d-6e82-4c6b-a560-bce6d7818b26)
+   
+   **Prometheus Configuration:**
+
+   To configure Prometheus to scrape metrics from Node Exporter, you need to modify the `prometheus.yml` file. Here is an example `prometheus.yml` configuration for your setup:
+
+   ```yaml
+   global:
+     scrape_interval: 15s
+
+   scrape_configs:
+     - job_name: 'node_exporter'
+       static_configs:
+         - targets: ['localhost:9100']
+   ```
+
+   Make sure to replace `<your-jenkins-ip>` and `<your-jenkins-port>` with the appropriate values for your Jenkins setup.
+
+   Check the validity of the configuration file:
+
+   ```bash
+   promtool check config /etc/prometheus/prometheus.yml
+   ```
+
+   Reload the Prometheus configuration without restarting:
+
+   ```bash
+   curl -X POST http://localhost:9090/-/reload
+   ```
+
+   You can access Prometheus targets at:
+
+   `http://<your-prometheus-ip>:9090/targets`
+
+![Screenshot (47)](https://github.com/user-attachments/assets/b123eb6c-1540-4e57-875e-1da8c5aa11f1)
+
+
+####Grafana
+
+**Install Grafana on Ubuntu 22.04 and Set it up to Work with Prometheus**
+
+**Step 1: Install Dependencies:**
+
+First, ensure that all necessary dependencies are installed:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y apt-transport-https software-properties-common
+```
+
+**Step 2: Add the GPG Key:**
+
+Add the GPG key for Grafana:
+
+```bash
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+```
+
+**Step 3: Add Grafana Repository:**
+
+Add the repository for Grafana stable releases:
+
+```bash
+echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+```
+
+**Step 4: Update and Install Grafana:**
+
+Update the package list and install Grafana:
+
+```bash
+sudo apt-get update
+sudo apt-get -y install grafana
+```
+
+**Step 5: Enable and Start Grafana Service:**
+
+To automatically start Grafana after a reboot, enable the service:
+
+```bash
+sudo systemctl enable grafana-server
+```
+
+Then, start Grafana:
+
+```bash
+sudo systemctl start grafana-server
+```
+
+**Step 6: Check Grafana Status:**
+
+Verify the status of the Grafana service to ensure it's running correctly:
+
+```bash
+sudo systemctl status grafana-server
+```
+
+**Step 7: Access Grafana Web Interface:**
+
+Open a web browser and navigate to Grafana using your server's IP address. The default port for Grafana is 3000. For example:
+
+`http://<your-server-ip>:3000`
+
+
+![Screenshot (50)](https://github.com/user-attachments/assets/47797803-0bf2-4c3b-aada-7fe07fd90b58)
+
+You'll be prompted to log in to Grafana. The default username is "admin," and the default password is also "admin."
+
+**Step 8: Change the Default Password:**
+
+When you log in for the first time, Grafana will prompt you to change the default password for security reasons. Follow the prompts to set a new password.
+
+**Step 9: Add Prometheus Data Source:**
+
+To visualize metrics, you need to add a data source. Follow these steps:
+
+- Click on the gear icon (⚙️) in the left sidebar to open the "Configuration" menu.
+
+- Select "Data Sources."
+
+- Click on the "Add data source" button.
+![Screenshot (51)](https://github.com/user-attachments/assets/f8b4885e-f15d-4eba-a7f4-cda7e321915f)
+- Choose "Prometheus" as the data source type.
+- In the "HTTP" section:
+  - Set the "URL" to `http://localhost:9090` (assuming Prometheus is running on the same server).
+  - Click the "Save & Test" button to ensure the data source is working.
+![Screenshot (54)](https://github.com/user-attachments/assets/f48ed22d-6774-4ca4-8ae6-d94aa230ea21)
+![Screenshot (55)](https://github.com/user-attachments/assets/e5f6e2b5-959f-44e6-877b-9baa08fc7b87)
+![Screenshot (56)](https://github.com/user-attachments/assets/84899f05-b178-4bb4-b11c-0c8ba69e9963)
+
+
+
+**Step 10: Import a Dashboard:**
+
+To make it easier to view metrics, you can import a pre-configured dashboard. Follow these steps:
+
+- Click on the "+" (plus) icon in the left sidebar to open the "Create" menu.
+
+- Select "Dashboard."
+
+- Click on the "Import" dashboard option.
+
+- Enter the dashboard code you want to import (e.g., code 1860).
+
+- Click the "Load" button.
+
+- Select the data source you added (Prometheus) from the dropdown.
+
+- Click on the "Import" button.
+once you import you can see grafana dashboard like this
+![Screenshot (57)](https://github.com/user-attachments/assets/a4b85076-d9a6-43a4-be6e-40b766829649)
+![Screenshot (58)](https://github.com/user-attachments/assets/290a2136-2d2f-46e7-b252-5008f73ea8a6)
+
+
+![Screenshot (52)](https://github.com/user-attachments/assets/cff01d39-a9e5-478b-843e-687e158e5779)
+
+
+You should now have a Grafana dashboard set up to visualize metrics from Prometheus.
