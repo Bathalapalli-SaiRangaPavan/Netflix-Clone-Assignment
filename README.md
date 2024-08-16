@@ -728,3 +728,110 @@ once you import you can see grafana dashboard like this
 
 
 You should now have a Grafana dashboard set up to visualize metrics from Prometheus.
+
+
+# Step 5: Install the Prometheus Plugin & Integrate Jenkins with the Prometheus server.
+
+## Monitoring Jenkins with Prometheus
+
+1. **Access Jenkins:**
+   - Open your web browser and navigate to your Jenkins instance (e.g., `http://<jenkins-ip>:8080`).
+
+2. **Go to Manage Jenkins:**
+   - On the Jenkins dashboard, click on **Manage Jenkins**.
+
+3. **Navigate to Plugin Manager:**
+   - Click on **Manage Plugins**.
+
+4. **Install the Prometheus Plugin:**
+   - Go to the **Available** tab.
+   - In the search box, type `Prometheus`.
+   - Check the box next to the **Prometheus Metrics Plugin**.
+   - Click **Install without restart** (or **Download now and install after restart** if necessary).
+
+5. **Handle Restart Prompt:**
+   - If prompted to restart Jenkins after the plugin installation, check the box to **Restart Jenkins when installation is complete and no jobs are running**.
+   - Jenkins will automatically restart. Once restarted, you will be prompted to log in.
+   - Enter your Jenkins credentials to log in.
+
+6. **Apply and Save:**
+   - After Jenkins has restarted and you've logged in, go back to **Manage Jenkins** and click on **Configure System**.
+   - Scroll down to the **Prometheus** section.
+   - Ensure the default settings are configured, then click **Apply** and **Save**.
+
+## Configure Prometheus to Monitor Jenkins
+
+
+1. **Access the Prometheus Configuration File in prometheus server:**
+   - SSH into your Prometheus server.
+
+   ```bash
+   sudo vim /etc/prometheus/prometheus.yml
+   ```
+2. **Add Jenkins as a Target:**
+
+- Paste the following configuration into the prometheus.yml file:
+
+```
+- job_name: 'jenkins'
+  metrics_path: '/prometheus'
+  static_configs:
+    - targets: ['<jenkins-ip>:8080']
+```
+![Screenshot (60)](https://github.com/user-attachments/assets/2f3c05ad-bc4b-42cf-b234-de0e811e9883)
+
+3. **Save and Exit:**
+
+- Save the file and exit the text editor.
+
+4. **Check the Configuration for Validity:**
+
+- Before restarting Prometheus, check if the configuration is valid:
+  ```
+  promtool check config /etc/prometheus/prometheus.yml
+  ```
+
+5. **Reload the Prometheus Configuration:**
+   
+- Use a POST request to reload the configuration:
+  ```
+  curl -X POST http://localhost:9090/-/reload
+  ```
+  
+6.** Verify the Configuration:**
+
+- You will see Jenkins is added to it
+- Check the targets section to ensure Jenkins is being monitored:
+
+![Screenshot (61)](https://github.com/user-attachments/assets/21d852f8-eb2c-48f8-bb25-e559a80202fe)
+
+
+## Add Dashboard in Grafana for Jenkins Monitoring
+
+1. **Access Grafana:**
+   - Open your web browser and navigate to your Grafana instance (e.g., `http://<grafana-ip>:3000`).
+
+2. **Log In to Grafana:**
+   - Enter your Grafana credentials to log in.
+
+3. **Import a Dashboard:**
+   - Click on **Dashboard** in the left-hand menu.
+   - Click on the **+** symbol to add a new dashboard.
+   - Select **Import**.
+
+4. **Load the Jenkins Dashboard:**
+   - In the **Import via grafana.com** section, enter the dashboard ID **9964**.
+   - Click **Load**.
+![Screenshot (62)](https://github.com/user-attachments/assets/abc729c9-c2b2-4cd0-8337-4da08de83c31)
+
+
+5. **Select a Prometheus Data Source:**
+   - In the **Import Dashboard** screen, select the Prometheus data source you configured earlier.
+![Screenshot (64)](https://github.com/user-attachments/assets/fac52990-de3a-4712-9b12-ea7ba0ab6160)
+
+6. **Click Import:**
+   - Click **Import** to add the dashboard to Grafana.
+   - You can now view a comprehensive overview of Jenkins.
+![Screenshot (65)](https://github.com/user-attachments/assets/f0dc81e7-4a4f-4f2c-816b-bfc65c4989b5)
+
+
