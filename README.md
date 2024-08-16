@@ -943,4 +943,60 @@ You should now have a Grafana dashboard set up to visualize metrics from Prometh
 
 4. **Apply Changes:**
    - Click **Apply** and **Save**.
+  
+# Step 8: Configure SonarQube Server in Manage Jenkins
+
+1. **Obtain SonarQube Server Details:**
+   - Grab the **Public IP Address** of your EC2 instance.
+   - Note that SonarQube operates on **Port 9000**. The URL will be in the format: `<Public IP>:9000`.
+
+![Screenshot (82)](https://github.com/user-attachments/assets/83f28fe1-5b49-4545-a579-b0660789df7c)
+
+
+2. **Generate a SonarQube Authentication Token:**
+   - Go to your SonarQube server by navigating to the URL: `<Public IP>:9000`.
+   - Click on **Administration**.
+   - Go to **Security** and then **Users**.
+   - Click on **Tokens**.
+   - Click on **Generate** to create a new token:
+     - Provide a name for the token.
+     - Click **Generate Token** to obtain your token.
+
+![Screenshot (84)](https://github.com/user-attachments/assets/b346caa8-56b4-42b0-a4ce-eb763b7240cd)
+![Screenshot (85)](https://github.com/user-attachments/assets/7d360e43-c497-43b2-95dd-e0dadfb4a610)
+
+**Copy Token**
+
+3. Goto **Jenkins Dashboard → Manage Jenkins → Credentials → Add Secret Text**. It should look like this.
+
+![Screenshot (87)](https://github.com/user-attachments/assets/74995d20-ec21-4890-8972-646d2fab0327)
+
+4. Next, navigate to **Dashboard → Manage Jenkins → System** and add the configuration as shown in the image below.
+
+![Screenshot (88)](https://github.com/user-attachments/assets/41c8ab9d-8107-4bd6-9ba5-4c1117a22c8d)
+![Screenshot (90)](https://github.com/user-attachments/assets/42389727-6423-447f-93ee-16db49bd7d05)
+
+Click on **Apply** and **Save**.
+
+The **Configure System** option in Jenkins is used for setting up various server configurations.
+
+5. We will add a **SonarQube Scanner** to this tools configuration.
+
+   - Go to **Manage Jenkins**.
+   - Click on **Tools**.
+
+![Screenshot (92)](https://github.com/user-attachments/assets/654c47e3-5f2b-44dc-a617-69301e72d5c5)
+
+
+6. In the **SonarQube Dashboard, add a quality gate** by navigating to:
+
+**Administration → Configuration → Webhooks**
+
+Click **Create** to add a new webhook. In the **URL** section, enter shown in below:
+
+`http://jenkins-public-ip:8080/sonarqube-webhook/`
+
+
+![Screenshot (94)](https://github.com/user-attachments/assets/096fe7b6-37fc-4e11-bd73-2201443fa27f)
+![Screenshot (95)](https://github.com/user-attachments/assets/7a845a5a-2e6c-4257-af2e-d754c105b68b)
 
