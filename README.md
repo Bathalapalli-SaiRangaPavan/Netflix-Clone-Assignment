@@ -905,9 +905,9 @@ You should now have a Grafana dashboard set up to visualize metrics from Prometh
   - Click **Apply** and **Save**.
 
 
-## Step 7: Install and Configure Plugins
+## Install and Configure Plugins
 
-### 7A: Install Required Plugins
+### A: Install Required Plugins
 
 1. **Access Plugin Manager:**
    - Navigate to **Manage Jenkins**.
@@ -921,7 +921,7 @@ You should now have a Grafana dashboard set up to visualize metrics from Prometh
      - **NodeJS Plugin**
  ![Screenshot (78)](https://github.com/user-attachments/assets/8f8c28b7-65af-4433-a503-926403adbf63)
 
-### 7B: Configure Tools in Global Tool Configuration
+### B: Configure Tools in Global Tool Configuration
 
 1. **Access Global Tool Configuration:**
    - Go to **Manage Jenkins**.
@@ -999,4 +999,107 @@ Click **Create** to add a new webhook. In the **URL** section, enter shown in be
 
 ![Screenshot (94)](https://github.com/user-attachments/assets/096fe7b6-37fc-4e11-bd73-2201443fa27f)
 ![Screenshot (95)](https://github.com/user-attachments/assets/7a845a5a-2e6c-4257-af2e-d754c105b68b)
+
+
+# Step 8: Create a Pipeline Project in Jenkins
+
+## Create a Pipeline Job in Jenkins
+
+1. **Open Jenkins Dashboard:**
+   - Navigate to your Jenkins instance in a web browser.
+
+2. **Create a New Item:**
+   - Click on **New Item** or **Create New Jobs** from the left-hand menu.
+
+3. **Enter Job Name:**
+   - In the **Enter an item name** field, type the name of your pipeline job (e.g., `NetflixClone`).
+
+4. **Select Pipeline Option:**
+   - Choose **Pipeline** from the list of available options.
+
+5. **Click OK:**
+   - Click **OK** to proceed to the job configuration page.
+
+6. **Configure Pipeline:**
+   - On the configuration page, scroll down to the **Pipeline** section.
+   - **Definition:** Choose **Pipeline script** to enter your pipeline code directly in Jenkins.
+   - **Script:** Enter your pipeline script in the **Script** text box.
+
+```
+pipeline{
+    agent any
+    tools{
+        jdk 'jdk17'
+        nodejs 'node16'
+    }
+    environment {
+        SCANNER_HOME=tool 'sonar-scanner'
+    }
+    stages {
+        stage('clean workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('Checkout from Git'){
+            steps{
+                git branch: 'main', url: 'https://github.com/Bathalapalli-SaiRangaPavan/Netflix-Clone-Assignment.git'
+            }
+        }
+        stage("Sonarqube Analysis "){
+            steps{
+                withSonarQubeEnv('sonar-server') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
+                    -Dsonar.projectKey=Netflix '''
+                }
+            }
+        }
+        stage("quality gate"){
+           steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+    }
+    post {
+     always {
+        emailext attachLog: true,
+            subject: "'${currentBuild.result}'",
+            body: "Project: ${env.JOB_NAME}<br/>" +
+                "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                "URL: ${env.BUILD_URL}<br/>",
+            to: 'bathalapalli.pavan@gmail.com',
+            attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+        }
+    }
+}
+```
+7. **Save the Configuration:**
+   - Click **Apply** and then **Save** to create the pipeline job.
+
+8. **Run the Pipeline Job:**
+   - Go back to the Jenkins dashboard and select your newly created pipeline job.
+   - Click **Build Now** to run the pipeline.
+
+- The build completed successfully, with all stages passing without issues.
+![Screenshot (104)](https://github.com/user-attachments/assets/0c92d769-457f-4a30-ad3c-79dde4da8280)
+![Screenshot (101)](https://github.com/user-attachments/assets/c52ca637-b7d6-4239-9a14-51d6da3a2335)
+
+- The quality gate report was successfully generated.
+![Screenshot (100)](https://github.com/user-attachments/assets/fc89cfd3-1e21-405a-b1ce-4741f75e9c24)
+![Screenshot (99)](https://github.com/user-attachments/assets/44305c38-4f3f-466c-8f1c-15a900412e8c)
+
+- The Grafana dashboard displays that the Jenkins job was successful.
+![Screenshot (108)](https://github.com/user-attachments/assets/d033bbbd-513f-4765-9532-ccfe6571e975)
+
+
+- A notification email was received confirming the successful completion of the build.
+![Screenshot (102)](https://github.com/user-attachments/assets/ea1cdd24-3da6-4c88-afa4-c14f88fd76cb)
+
 
