@@ -835,3 +835,71 @@ You should now have a Grafana dashboard set up to visualize metrics from Prometh
 ![Screenshot (65)](https://github.com/user-attachments/assets/f0dc81e7-4a4f-4f2c-816b-bfc65c4989b5)
 
 
+## Step 6: Email Integration With Jenkins and Plugin Setup
+
+### Install Email Extension Plugin in Jenkins
+
+1. **Install the Plugin:**
+   - Go to Jenkins dashboard and navigate to **Manage Jenkins**.
+   - Click on **Manage Plugins**.
+   - Go to the **Available** tab.
+   - Search for **Email Extension Plugin**.
+   - Check the box next to **Email Extension Plugin** and click **Install**.
+     
+2. **Configure Gmail for Jenkins:**
+
+   a. **Access Gmail Settings:**
+      - Go to your Gmail account and click on your profile picture.
+      - Click on **Manage Your Google Account**.
+
+   b. **Enable 2-Step Verification:**
+      - Click on the **Security** tab on the left-hand side.
+      - Ensure that 2-Step Verification is enabled. If not, follow the prompts to enable it.
+
+   c. **Generate App Password:**
+      - In the **Security** section, find **App passwords**.
+      - Click on **Select app** dropdown and choose **Other**.
+      - Provide a name (e.g., "Jenkins") and click **Generate**.
+      - Copy the generated app password. 
+
+3. **Configure Credentials in Jenkins:**
+
+   a. **Add New Credentials:**
+      - Go to Jenkins dashboard and navigate to **Manage Jenkins**.
+      - Click on **Manage Credentials**.
+      - Click on **(global)** or the relevant domain if applicable.
+      - Click on **Add Credentials**.
+
+      - **Kind:** Select **Username with password**.
+      - **Username:** Enter your Gmail address.
+      - **Password:** Enter the app password you generated earlier.
+      - **ID:** Provide a unique ID for the credential (e.g., `gmail-credentials`).
+      - **Description:** Enter a description (e.g., `Gmail for Jenkins notifications`).
+      -  Click **create** to save the credentials.
+
+
+![Screenshot (66)](https://github.com/user-attachments/assets/a50534eb-39cb-401e-97cf-2e6d0c6e8b8f)
+
+      
+   b. **Configure E-mail Notification:**
+      - Go to **Manage Jenkins** and click on **Configure System**.
+      - Scroll down to the **E-mail Notification** section and configure the details as shown below:
+
+![Screenshot (68)](https://github.com/user-attachments/assets/0f4859a0-f878-469b-a2f0-e380d8c70efa)
+![Screenshot (69)](https://github.com/user-attachments/assets/b2a81022-b0db-4206-9210-258770156112)
+![Screenshot (70)](https://github.com/user-attachments/assets/22a0b879-ee4a-4d5d-8d1e-7e653d10822f)
+      - Click **Test Connectivity**
+      - Check your **Email** 
+![Screenshot (71)](https://github.com/user-attachments/assets/1aa5cff4-d089-4752-b71a-087ca5100c51)
+
+   - This step is to validate the email configuration.
+
+    
+   c. Next, **configure the settings in the Extended E-mail Notification** section according to the details shown in the images below:
+
+![Screenshot (77)](https://github.com/user-attachments/assets/662f61d0-e75d-4afa-80d3-06815424ba40)
+![Screenshot (73)](https://github.com/user-attachments/assets/f0f7f87d-553d-4b70-a367-e97dbb7f8960)
+![Screenshot (74)](https://github.com/user-attachments/assets/c1acbb1c-9ecb-4d27-a32a-520a6d464aa2)
+![Screenshot (76)](https://github.com/user-attachments/assets/47821817-2f97-4a6e-96cd-6e572536d027)
+
+  - Click **Apply** and **Save**.
