@@ -1102,4 +1102,103 @@ pipeline{
 - A notification email was received confirming the successful completion of the build.
 ![Screenshot (102)](https://github.com/user-attachments/assets/ea1cdd24-3da6-4c88-afa4-c14f88fd76cb)
 
+## Step 9: Install OWASP Dependency Check Plugin
+
+Go to the **Jenkins Dashboard → Manage Jenkins → Plugins**.
+
+Search for **OWASP Dependency-Check**, click on it, and install the plugin.
+
+First, we configured the plugin, and next, we need to configure the tool.
+
+Go to **Dashboard → Manage Jenkins → Tools**-> Configure like below.
+
+![Screenshot (109)](https://github.com/user-attachments/assets/1b9042df-f438-4854-8036-2acc83ea0b98)
+
+ **Configure Pipeline:**
+   - On the configuration page, scroll down to the **Pipeline** section.
+   - **Script:** Enter your pipeline script in the **Script** text box.
+```
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        nodejs 'node16'
+    }
+    environment {
+        SCANNER_HOME=tool 'sonar-scanner'
+    }
+    stages {
+        stage('clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Bathalapalli-SaiRangaPavan/Netflix-Clone-Assignment.git'
+            }
+        }
+        stage("Sonarqube Analysis") {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
+                    -Dsonar.projectKey=Netflix '''
+                }
+            }
+        }
+        stage("Quality Gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('OWASP FS Scan') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('Trivy FS Scan') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+    }
+    post {
+        always {
+            emailext attachLog: true,
+                subject: "'${currentBuild.result}'",
+                body: "Project: ${env.JOB_NAME}<br/>" +
+                    "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                    "URL: ${env.BUILD_URL}<br/>",
+                to: 'bathalapalli.pavan@gmail.com',
+                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+        }
+    }
+}
+```
+**Run the Pipeline Job:**
+   - Go back to the Jenkins dashboard and select your newly created pipeline job.
+   - Click **Build Now** to run the pipeline.
+
+- The build completed successfully, with all stages passing without issues.
+![Screenshot (114)](https://github.com/user-attachments/assets/ceb8267b-7247-4f5a-bef4-6f6716f80441)
+- The quality gate report was successfully generated.
+![Screenshot (117)](https://github.com/user-attachments/assets/ddcd97bd-b993-4fd0-bbd2-912033c7a3f5)
+
+- A graph displaying the status, along with identified vulnerabilities, will be generated for better visualization. 
+![Screenshot (113)](https://github.com/user-attachments/assets/3d6049d7-27c1-409d-af9b-0dddb5702ec8)
+
+- The Grafana dashboard displays that the Jenkins job was successful.
+![Screenshot (115)](https://github.com/user-attachments/assets/cef28101-3dbe-4212-99cf-3598c456cd55)
+
+- A notification email was received confirming the successful completion of the build.
+![Screenshot (111)](https://github.com/user-attachments/assets/50bb7e49-3f8b-4b93-b840-f8ba9fcdf238)
+
 
