@@ -903,3 +903,44 @@ You should now have a Grafana dashboard set up to visualize metrics from Prometh
 ![Screenshot (76)](https://github.com/user-attachments/assets/47821817-2f97-4a6e-96cd-6e572536d027)
 
   - Click **Apply** and **Save**.
+
+
+## Step 7: Install and Configure Plugins
+
+### 7A: Install Required Plugins
+
+1. **Access Plugin Manager:**
+   - Navigate to **Manage Jenkins**.
+   - Click on **Manage Plugins**.
+   - Go to the **Available** tab.
+
+2. **Install Plugins:**
+   - Search for and install the following plugins:
+     - **Eclipse Temurin Installer**
+     - **SonarQube Scanner**
+     - **NodeJS Plugin**
+ ![Screenshot (78)](https://github.com/user-attachments/assets/8f8c28b7-65af-4433-a503-926403adbf63)
+
+### 7B: Configure Tools in Global Tool Configuration
+
+1. **Access Global Tool Configuration:**
+   - Go to **Manage Jenkins**.
+   - Click on **Tools**.
+
+2. **Configure JDK:**
+   - Find the **JDK** section.
+   - Add the JDK version (e.g., JDK 17).
+
+![Screenshot (80)](https://github.com/user-attachments/assets/fd584769-ff75-4a4f-8675-907556bb187e)
+
+
+3. **Configure Node.js:**
+   - Find the **NodeJS** section.
+   - Add the Node.js version (e.g., Node.js 16).
+
+![Screenshot (81)](https://github.com/user-attachments/assets/e170252a-6886-47f0-8963-ec8e45c04df8)
+
+
+4. **Apply Changes:**
+   - Click **Apply** and **Save**.
+
