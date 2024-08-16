@@ -6,7 +6,7 @@
 
 ## Objective
 
-Deploy a Netflix clone using a DevSecOps approach, integrating Jenkins for CI/CD with automated security and quality checks, Docker for containerization, and Kubernetes for orchestration. Monitor Jenkins and Kubernetes metrics using Grafana, Prometheus, and Node Exporter to ensure a secure, scalable, and resilient deployment. This project aims to provide a comprehensive guide for secure and automated application deployment.
+Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenkins for CI/CD with automated security and quality checks, Docker for containerization, and Kubernetes for orchestration. Monitor Jenkins and Kubernetes metrics using Grafana, Prometheus, and Node Exporter to ensure a secure, scalable, and resilient deployment. This project aims to provide a comprehensive guide for secure and automated application deployment.
 
 ---
 
@@ -1075,7 +1075,7 @@ pipeline{
                 "Build Number: ${env.BUILD_NUMBER}<br/>" +
                 "URL: ${env.BUILD_URL}<br/>",
             to: 'bathalapalli.pavan@gmail.com',
-            attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+            attachmentsPattern: 'trivyfs.txt'
         }
     }
 }
@@ -1088,7 +1088,7 @@ pipeline{
    - Click **Build Now** to run the pipeline.
 
 - The build completed successfully, with all stages passing without issues.
-![Screenshot (104)](https://github.com/user-attachments/assets/0c92d769-457f-4a30-ad3c-79dde4da8280)
+![Screenshot (103)](https://github.com/user-attachments/assets/8e9fd6b2-4009-4a1c-89c7-d6007be168b6)
 ![Screenshot (101)](https://github.com/user-attachments/assets/c52ca637-b7d6-4239-9a14-51d6da3a2335)
 
 - The quality gate report was successfully generated.
@@ -1178,7 +1178,7 @@ pipeline {
                     "Build Number: ${env.BUILD_NUMBER}<br/>" +
                     "URL: ${env.BUILD_URL}<br/>",
                 to: 'bathalapalli.pavan@gmail.com',
-                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+                attachmentsPattern: 'trivyfs.txt'
         }
     }
 }
@@ -1200,5 +1200,173 @@ pipeline {
 
 - A notification email was received confirming the successful completion of the build.
 ![Screenshot (111)](https://github.com/user-attachments/assets/50bb7e49-3f8b-4b93-b840-f8ba9fcdf238)
+
+
+## Step 10 — Build, push, and run a Docker image as a container.
+
+
+**Note:** If you already have a DockerHub account, you can skip the DockerHub account creation steps.
+
+To build and push Docker images, follow these steps:
+
+1. **Create a DockerHub Account:**
+   - Visit the [DockerHub website](https://hub.docker.com/).
+   - Click on **Sign Up** to create a new account.
+   - Fill in the required details, including your username, email, and password.
+   - Complete the verification process by following the instructions sent to your email.
+   - Log in to DockerHub using your credentials.
+
+2. **Install Docker Plugins in Jenkins:**
+   - Go to the Jenkins Dashboard.
+   - Navigate to **Manage Jenkins** → **Manage Plugins** → **Available Plugins**.
+   - Search for and install the following plugins:
+     - Docker
+     - Docker Commons
+     - Docker Pipeline
+     - Docker API
+     - docker-build-step
+   - Click **Install** without restarting Jenkins.
+
+![Screenshot (118)](https://github.com/user-attachments/assets/a98cb7af-6bb6-4a2e-bb6a-2192838d1043)
+
+3. **Add DockerHub Credentials in Jenkins:**
+   - Go to the Jenkins Dashboard.
+   - Navigate to **Manage Jenkins** → **Manage Credentials**.
+   - Select the appropriate domain or create a new one if needed.
+   - Click on **Add Credentials**.
+   - Choose **Username with password** as the kind.
+   - Enter your DockerHub username and password.
+   - Provide an **ID** and **Description** for easy identification.
+   - Click **create** to save the credentials.
+  
+
+![Screenshot (119)](https://github.com/user-attachments/assets/5438b9ce-f99c-4470-8859-a643841f1169)
+
+4. **Configure Docker Tool:**
+   - Go back to the Jenkins Dashboard.
+   - Navigate to **Manage Jenkins** → **Global Tool Configuration**.
+   - Set up the Docker tool by specifying the Docker installations and settings as required shown below.
+  
+  ![Screenshot (131)](https://github.com/user-attachments/assets/2052ad50-d311-4284-ad10-77439553c39d)
+
+**Configure Pipeline:**
+   - On the configuration page, scroll down to the **Pipeline** section.
+   - **Script:** Enter your pipeline script in the **Script** text box.
+
+```
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        nodejs 'node16'
+    }
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Bathalapalli-SaiRangaPavan/Netflix-Clone-Assignment.git'
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
+                        -Dsonar.projectKey=Netflix'''
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('OWASP FS Scan') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('Trivy FS Scan') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh "docker build --build-arg TMDB_V3_API_KEY=Aj7ay86fe14eca3e76869b92 -t netflix ."
+                        sh "docker tag netflix btppavan/netflix:latest"
+                        sh "docker push btppavan/netflix:latest"
+                    }
+                }
+            }
+        }
+        stage('TRIVY') {
+            steps {
+                sh "trivy image btppavan/netflix:latest > trivyimage.txt"
+            }
+        }
+        stage('Deploy to Container') {
+            steps {
+                sh 'docker run -d --name netflix -p 8081:80 btppavan/netflix:latest'
+            }
+        }
+    }
+    post {
+        always {
+            emailext attachLog: true,
+                subject: "'${currentBuild.result}'",
+                body: "Project: ${env.JOB_NAME}<br/>" +
+                      "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                      "URL: ${env.BUILD_URL}<br/>",
+                to: 'bathalapalli.pavan@gmail.com',
+                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+        }
+    }
+}
+```
+
+![Screenshot (136)](https://github.com/user-attachments/assets/45176329-41b0-497c-8d9d-0e4578091161)
+
+![Screenshot (138)](https://github.com/user-attachments/assets/3430b1d9-476c-4f6f-b3b3-297b4f1934e0)
+
+- The quality gate report was successfully generated.
+![Screenshot (117)](https://github.com/user-attachments/assets/ddcd97bd-b993-4fd0-bbd2-912033c7a3f5)
+
+- A graph displaying the status, along with identified vulnerabilities, will be generated for better visualization. 
+![Screenshot (113)](https://github.com/user-attachments/assets/3d6049d7-27c1-409d-af9b-0dddb5702ec8)
+
+- The Trivy scan report has been sent via email.
+![Screenshot (141)](https://github.com/user-attachments/assets/364bf5b2-89ec-431a-8938-17bd72e3ec73)
+
+- The Docker image has been pushed to DockerHub after the pipeline execution.
+![Screenshot (143)](https://github.com/user-attachments/assets/45b894cb-3101-411f-9800-92ca27f18df3)
+
+- Trivy image report sent to mail
+![Screenshot (142)](https://github.com/user-attachments/assets/c26b0ecd-68aa-4a81-81e3-e081f1f09f03)
+
+- You can view and monitor all configured targets directly in the Prometheus dashboard
+![Screenshot (145)](https://github.com/user-attachments/assets/1f2b30b5-802c-4312-9c03-eabeb57dd7bb)
+
+- The Grafana dashboard displays that the Jenkins job was successful.
+![Screenshot (146)](https://github.com/user-attachments/assets/7c25d2a4-622b-4e3d-bf05-3760fc60ff99)
+
+-  A notification email was received confirming the successful completion of the build.
+![Screenshot (147)](https://github.com/user-attachments/assets/3e0cdb4a-61be-4583-8d1b-0440aed68efc)
 
 
