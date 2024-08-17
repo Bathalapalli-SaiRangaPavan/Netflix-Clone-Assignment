@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netflixcloneapp-deployment
+spec:
+  selector:
+    matchLabels:
+      app: netflixcloneapp
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: netflixcloneapp
+    spec:
+      containers:
+        - name: netflixcloneapp
+          image: btppavan/netflix:latest 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netflixcloneapp-ssvc
+spec:
+  selector:
+    app: netflixcloneapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080 
+  type: LoadBalancer
