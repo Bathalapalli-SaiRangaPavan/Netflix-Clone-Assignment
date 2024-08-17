@@ -6,7 +6,7 @@
 
 ## Objective
 
-Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenkins for CI/CD with automated security and quality checks, Docker for containerization, and Kubernetes for orchestration. Monitor Jenkins and Kubernetes metrics using Grafana, Prometheus, and Node Exporter to ensure a secure, scalable, and resilient deployment. This project aims to provide a comprehensive guide for secure and automated application deployment.
+Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenkins for CI/CD with automated security and quality checks, Docker for containerization, and monitoring Jenkins and application metrics using Grafana, Prometheus, and Node Exporter to ensure a secure, scalable, and resilient deployment. This project aims to provide a comprehensive guide for secure and automated application deployment.
 
 ---
 
@@ -32,8 +32,8 @@ Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenk
      - Pushes the Docker image to DockerHub.
    - **Stage 7: Docker Image Security Scan**
      - Scans the Docker image for vulnerabilities using Aqua Trivy.
-   - **Stage 8: Kubernetes Deployment**
-     - Deploys the application as a container in a Kubernetes cluster.
+   - **Stage 8: Deploymet**
+     - Deploys the application as a container.
    - **Stage 9: Email Notifications**
      - Sends notifications on the build and deployment status (success/failure).
 
@@ -45,61 +45,54 @@ Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenk
 
 ---
 
-# Step-by-Step Implementation Guide
+## Step-by-Step Implementation Guide
 To successfully deploy the Netflix clone application using a DevSecOps approach, follow these steps to set up and configure the necessary tools and services. This guide provides a structured approach to achieve a secure, scalable, and automated deployment.
 
 
-## Step 1: Launch an Ubuntu (22.04) T2 Large Instance
+### Step 1: Launch an Ubuntu (22.04) T2 Large Instance
    - Start an EC2 instance with Ubuntu 22.04 and the T2 Large instance type.
 
-## Step 2: Install Jenkins, Docker, and Trivy
+### Step 2: Install Jenkins, Docker, and Trivy
    - Install Jenkins on the instance.
    - Install Docker and Trivy.
    - Create a SonarQube container using Docker.
 
-## Step 3: Create a TMDB API Key
+### Step 3: Create a TMDB API Key
    - Register and generate an API key from The Movie Database (TMDB).
 
-## Step 4: Install Prometheus and Grafana
+### Step 4: Install Prometheus and Grafana
    - Install Prometheus and Grafana on the server.
 
-## Step 5: Install the Prometheus Plugin
+### Step 5: Install the Prometheus Plugin
    - Add the Prometheus plugin to Jenkins.
    - Integrate Jenkins with the Prometheus server.
 
-## Step 6: Email Integration with Jenkins
+### Step 6: Email Integration with Jenkins
    - Set up email integration in Jenkins and configure the necessary plugins.
 
-## Step 7: Install Jenkins Plugins
+### Step 7: Install Jenkins Plugins
    - Install essential plugins: JDK, SonarQube Scanner, Node.js, and OWASP Dependency Check.
 
-## Step 8: Create a Pipeline Project in Jenkins
+### Step 8: Create a Pipeline Project in Jenkins
    - Set up a new pipeline project in Jenkins using a declarative pipeline script.
 
-## Step 9: Install OWASP Dependency Check Plugin
+### Step 9: Install OWASP Dependency Check Plugin
    - Add and configure the OWASP Dependency Check plugin in Jenkins.
 
-## Step 10: Docker Image Build and Push
+### Step 10: Dockerfile, Build, push, and run a Docker image as a container.
    - Build the Docker image for your application.
    - Push the Docker image to DockerHub.
-
-## Step 11: Deploy the Image Using Docker
    - Deploy the Docker image on the instance using Docker.
-
-## Step 12: Kubernetes Master and Slave Setup
-   - Set up a Kubernetes master and slave nodes on Ubuntu (20.04).
-
-## Step 13: Access the Netflix App on the Browser
+ 
+### Step 11: Access the Netflix App on the Browser
    - Open a web browser and navigate to the deployed Netflix clone application.
 
-## Step 14: Terminate the AWS EC2 Instances
-   - After verifying everything is working, terminate the AWS EC2 instances.
 
-
-# Step 1: Launch and Access an Ubuntu 22.04 T2 Large Instance on AWS
+## Step 1: Launch and Access an Ubuntu 22.04 T2 Large Instance on AWS
 
 ### 1. Sign In to AWS Management Console
 - Go to the [AWS Management Console](https://aws.amazon.com/console/) and sign in with your credentials.
+![Screenshot (167)](https://github.com/user-attachments/assets/36c55110-6511-4f4b-8fa8-8be694a5dd4e)
 
 ### 2. Navigate to EC2 Dashboard
 - In the AWS Management Console, select **EC2** from the Services menu.
@@ -188,7 +181,7 @@ To successfully deploy the Netflix clone application using a DevSecOps approach,
 - You should now see the command-line interface of your EC2 instance in MobaXterm.
 - You can run commands and interact with your instance as needed.
 
-# Step 2: Install Jenkins, Docker, SonarQube and Trivy on Your AWS EC2 Instance
+## Step 2: Install Jenkins, Docker, SonarQube and Trivy on Your AWS EC2 Instance
 
 ### 1. Switch to Superuser
    - Run the following command to switch to superuser:
@@ -352,7 +345,7 @@ To successfully deploy the Netflix clone application using a DevSecOps approach,
      ```bash
      trivy --version
      ```
-# Step 3: Create a TMDB API Key
+## Step 3: Create a TMDB API Key
 
 Next, we will create a TMDB API key.
 
@@ -384,7 +377,7 @@ Next, we will create a TMDB API key.
 8. **Copy Your API Key**
    - Once created, your API key will be displayed. Copy this key as you will need it to make API requests.
 
-# Step 4: Install Prometheus and Grafana on a New Server
+## Step 4: Install Prometheus and Grafana on a New Server
 
 ## Set Up the Server
 
@@ -730,7 +723,7 @@ once you import you can see grafana dashboard like this
 You should now have a Grafana dashboard set up to visualize metrics from Prometheus.
 
 
-# Step 5: Install the Prometheus Plugin & Integrate Jenkins with the Prometheus server.
+## Step 5: Install the Prometheus Plugin & Integrate Jenkins with the Prometheus server.
 
 ## Monitoring Jenkins with Prometheus
 
@@ -944,7 +937,7 @@ You should now have a Grafana dashboard set up to visualize metrics from Prometh
 4. **Apply Changes:**
    - Click **Apply** and **Save**.
   
-# Step 8: Configure SonarQube Server in Manage Jenkins
+## Step 7: Configure SonarQube Server in Manage Jenkins
 
 1. **Obtain SonarQube Server Details:**
    - Grab the **Public IP Address** of your EC2 instance.
@@ -1001,9 +994,7 @@ Click **Create** to add a new webhook. In the **URL** section, enter shown in be
 ![Screenshot (95)](https://github.com/user-attachments/assets/7a845a5a-2e6c-4257-af2e-d754c105b68b)
 
 
-# Step 8: Create a Pipeline Project in Jenkins
-
-## Create a Pipeline Job in Jenkins
+## Step 8: Create a Pipeline Job in Jenkins
 
 1. **Open Jenkins Dashboard:**
    - Navigate to your Jenkins instance in a web browser.
@@ -1202,7 +1193,7 @@ pipeline {
 ![Screenshot (111)](https://github.com/user-attachments/assets/50bb7e49-3f8b-4b93-b840-f8ba9fcdf238)
 
 
-## Step 10 — Build, push, and run a Docker image as a container.
+## Step 10 — Dockerfile, Build, push, and run a Docker image as a container.
 
 
 **Note:** If you already have a DockerHub account, you can skip the DockerHub account creation steps.
@@ -1249,7 +1240,60 @@ To build and push Docker images, follow these steps:
   
   ![Screenshot (131)](https://github.com/user-attachments/assets/2052ad50-d311-4284-ad10-77439553c39d)
 
-**Configure Pipeline:**
+**Dockerfile**
+Note: This file is already committed to the GitHub repository.
+```
+# Use the official Node.js 16.17.0 image based on Alpine Linux as the base image for the build stage
+FROM node:16.17.0-alpine as builder
+
+# Set the working directory inside the container to /app
+WORKDIR /app
+
+# Copy the package.json file from the host machine to the container's /app directory
+COPY ./package.json .
+
+# Copy the yarn.lock file from the host machine to the container's /app directory
+COPY ./yarn.lock .
+
+# Install the dependencies defined in package.json using yarn
+RUN yarn install
+
+# Copy the entire project directory from the host machine to the container's /app directory
+COPY . .
+
+# Define an argument to pass the TMDB API key into the container during build time
+ARG TMDB_V3_API_KEY
+
+# Set the environment variable VITE_APP_TMDB_V3_API_KEY inside the container with the provided TMDB API key
+ENV VITE_APP_TMDB_V3_API_KEY=${TMDB_V3_API_KEY}
+
+# Set another environment variable for the API endpoint URL
+ENV VITE_APP_API_ENDPOINT_URL="https://api.themoviedb.org/3"
+
+# Run the build command using yarn, which compiles the application for production
+RUN yarn build
+
+# Use the official Nginx image based on Alpine Linux for the final stage to serve the built application
+FROM nginx:stable-alpine
+
+# Set the working directory inside the container to the Nginx default content directory
+WORKDIR /usr/share/nginx/html
+
+# Remove all existing content in the Nginx content directory to prepare for the new build
+RUN rm -rf ./*
+
+# Copy the compiled files from the previous build stage's /app/dist directory to the Nginx content directory
+COPY --from=builder /app/dist .
+
+# Expose port 80, which Nginx will use to serve the application
+EXPOSE 80
+
+# Set the Nginx entry point command to start the server and keep the container running in the foreground
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
+```
+
+
+**Configure Pipeline in Jenkins:**
    - On the configuration page, scroll down to the **Pipeline** section.
    - **Script:** Enter your pipeline script in the **Script** text box.
 
@@ -1356,7 +1400,7 @@ pipeline {
 ![Screenshot (141)](https://github.com/user-attachments/assets/364bf5b2-89ec-431a-8938-17bd72e3ec73)
 
 - The Docker image has been pushed to DockerHub after the pipeline execution.
-![Screenshot (143)](https://github.com/user-attachments/assets/45b894cb-3101-411f-9800-92ca27f18df3)
+![Screenshot (161)](https://github.com/user-attachments/assets/c6b7d89f-be76-4aae-9cd9-cf5c2cabbb72)
 
 - Trivy image report sent to mail
 ![Screenshot (142)](https://github.com/user-attachments/assets/c26b0ecd-68aa-4a81-81e3-e081f1f09f03)
@@ -1367,11 +1411,29 @@ pipeline {
 - The Grafana dashboard displays that the Jenkins job was successful.
 ![Screenshot (146)](https://github.com/user-attachments/assets/7c25d2a4-622b-4e3d-bf05-3760fc60ff99)
 
--  A notification email was received confirming the successful completion of the build.
-![Screenshot (147)](https://github.com/user-attachments/assets/3e0cdb4a-61be-4583-8d1b-0440aed68efc)
+- Ensure the necessary ports are open in the AWS security group to successfully access the output at the Jenkins URL: http://<jenkins-url>:port
+![Screenshot (155)](https://github.com/user-attachments/assets/fa8c4231-a681-4046-a67b-0781218d7ac3)
 
-- You can successfully view the output
-
+## Step 11: Access the Netflix App on the Browser
+- You can see that it has been successfully deployed and you are able to access the Netflix clone.
 ![Screenshot (152)](https://github.com/user-attachments/assets/9b7e5f51-e4e9-43a2-ab2c-46731b9f0988)
 
+-  A notification email was received confirming the successful completion of the build and deploy.
+![Screenshot (147)](https://github.com/user-attachments/assets/3e0cdb4a-61be-4583-8d1b-0440aed68efc)
 
+
+## Tools and Technologies Used
+
+To successfully achieve this assignment, the following tools and technologies were used:
+
+1. **GitHub**: Version control and source code management.
+2. **AWS Cloud**: Hosting and infrastructure management.
+3. **Jenkins**: CI/CD pipeline automation with integrated security, quality checks, and testing.
+4. **SonarQube**: Code quality and security analysis.
+5. **npm**: Package management for Node.js, including testing.
+6. **OWASP Dependency-Check**: Identifying and reporting vulnerable dependencies.
+7. **Trivy**: Vulnerability scanning for Docker images.
+8. **Docker**: Containerization of the application.
+9. **Prometheus**: Metrics collection and monitoring.
+10. **Node Exporter**: Exporting server metrics for Prometheus.
+11. **Grafana**: Visualization and monitoring of metrics.
