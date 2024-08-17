@@ -6,7 +6,7 @@
 
 ## Objective
 
-Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenkins for CI/CD with automated security and quality checks, Docker for containerization, and monitoring Jenkins and application metrics using Grafana, Prometheus, and Node Exporter to ensure a secure, scalable, and resilient deployment. This project aims to provide a comprehensive guide for secure and automated application deployment.
+Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenkins for CI/CD with automated security and quality checks, Docker for containerization, and Kubernetes for orchestration, ensuring high availability, scalability, and fault tolerance. Monitor Jenkins and application metrics using Grafana, Prometheus, and Node Exporter to ensure a secure, scalable, and resilient deployment. This project aims to provide a comprehensive guide for secure and automated application deployment.
 
 ---
 
@@ -34,7 +34,9 @@ Deploy a Netflix clone using a DevSecOps approach on AWS Cloud, integrating Jenk
      - Scans the Docker image for vulnerabilities using Aqua Trivy.
    - **Stage 8: Deploymet**
      - Deploys the application as a container.
-   - **Stage 9: Email Notifications**
+    - **Stage 9: Deploymet to kubernetes**
+     - Deploys the application to a Kubernetes cluster for orchestration. 
+   - **Stage 11: Email Notifications**
      - Sends notifications on the build and deployment status (success/failure).
 
 ### 3. Monitoring
@@ -83,8 +85,11 @@ To successfully deploy the Netflix clone application using a DevSecOps approach,
    - Build the Docker image for your application.
    - Push the Docker image to DockerHub.
    - Deploy the Docker image on the instance using Docker.
+
+### Step 11: To ensure high availability, scalability, and fault tolerance for our application, we utilize Kubernetes.
+   - Deploy the Docker image to kubernetes 
  
-### Step 11: Access the Netflix App on the Browser
+### Step 12: Access the Netflix App on the Browser
    - Open a web browser and navigate to the deployed Netflix clone application.
 
 
@@ -1414,12 +1419,239 @@ pipeline {
 - Ensure the necessary ports are open in the AWS security group to successfully access the output at the Jenkins URL: http://<jenkins-url>:port
 ![Screenshot (155)](https://github.com/user-attachments/assets/fa8c4231-a681-4046-a67b-0781218d7ac3)
 
-## Step 11: Access the Netflix App on the Browser
+
+##  Access the Netflix App on the Browser
 - You can see that it has been successfully deployed and you are able to access the Netflix clone.
 ![Screenshot (152)](https://github.com/user-attachments/assets/9b7e5f51-e4e9-43a2-ab2c-46731b9f0988)
 
 -  A notification email was received confirming the successful completion of the build and deploy.
 ![Screenshot (147)](https://github.com/user-attachments/assets/3e0cdb4a-61be-4583-8d1b-0440aed68efc)
+
+## Step 11 - To ensure high availability, scalability, and fault tolerance for our application, we deploy to Kubernetes.
+
+
+**Install required plugins** shown below 
+![Screenshot (169)](https://github.com/user-attachments/assets/c0adc905-16cf-4164-8f38-b2c15469089d)
+
+
+**Install kubectl** on Jenkins System
+
+- Download kubectl: 
+```
+curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+```
+- Install kubectl:
+```
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+```
+- Verify Installation:
+```
+kubectl version --client
+```
+- Configure kubectl:
+Ensure kubectl is configured to access your Kubernetes cluster. Place your kubeconfig file at the default location (~/.kube/config) or set the KUBECONFIG environment variable to point to your kubeconfig file:
+```
+export KUBECONFIG=/path/to/your/kubeconfig
+```
+
+**Add Kubernetes Credentials** to Jenkins:
+- Open Manage Jenkins: Click on "Manage Jenkins."
+- Go to Manage Credentials: Click on "Manage Credentials."
+- Select the Right Domain: Choose the domain where you want to add the credentials.
+- Add New Credentials: Click on "Add Credentials" and select "Kubernetes Configuration (kubeconfig)" as the kind.
+- Enter Credentials Details:
+- ID: Provide a unique identifier for the credentials (e.g., k8-cred).
+- Kubeconfig: Paste the contents of your kubeconfig file.
+- Save: Click "OK" or "Save" to store the credentials.
+
+**Kubernetes manifest files**: including the deployment and service configurations, have been committed to the Kubernetes folder in the GitHub repository.
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netflixcloneapp-deployment
+  labels:
+    app: netflixcloneapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: netflixcloneapp
+  template:
+    metadata:
+      labels:
+        app: netflixcloneapp
+    spec:
+      containers:
+        - name: netflixcloneapp
+          image: btppavan/netflix:latest
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netflixcloneapp-ssvc
+  labels:
+    app: netflixcloneapp
+spec:
+  type: LoadBalancer  # Service type set to LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80        # Port exposed by the service
+      targetPort: 80  # Port on which the application is running inside the container
+  selector:
+    app: netflixcloneapp
+```
+
+**Configure Pipeline in Jenkins:**
+   - On the configuration page, scroll down to the **Pipeline** section.
+   - **Script:** Enter your pipeline script in the **Script** text box.
+
+```
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        nodejs 'node16'
+    }
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Bathalapalli-SaiRangaPavan/Netflix-Clone-Assignment.git'
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''$SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectName=Netflix \
+                        -Dsonar.projectKey=Netflix'''
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                }
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('OWASP FS Scan') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('Trivy FS Scan') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh "docker build --build-arg TMDB_V3_API_KEY=9e7e0d7XXXX5bda739af5bea6f8aa6e0 -t netflix ."
+                        sh "docker tag netflix btppavan/netflix:1.0"
+                        sh "docker push btppavan/netflix:1.0"
+                    }
+                }
+            }
+        }
+        stage('TRIVY') {
+            steps {
+                sh "trivy image btppavan/netflix:latest > trivyimage.txt"
+            }
+        }
+        stage('Deploy to Container') {
+            steps {
+                sh 'docker run -d --name netflix -p 8082:80 btppavan/netflix:1.0'
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    dir('Kubernetes') {
+                        withKubeConfig(clusterName: 'netflix-cluster', credentialsId: 'k8-cred', namespace: 'webapps', serverUrl: 'https://FDFB0A3A1ACE848BE0A6AFA79145ACE7.gr7.us-east-1.eks.amazonaws.com') {
+                            sh 'kubectl apply -f deployment.yml'
+                            sh 'kubectl apply -f service.yml'
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            emailext attachLog: true,
+                subject: "'${currentBuild.result}'",
+                body: "Project: ${env.JOB_NAME}<br/>" +
+                      "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                      "URL: ${env.BUILD_URL}<br/>",
+                to: 'bathalapalli.pavan@gmail.com',
+                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+        }
+    }
+}
+```
+
+
+- The build completed successfully, with all stages passing without issues.
+![Screenshot (180)](https://github.com/user-attachments/assets/9b7f55de-3478-477d-bbcb-0ac360887761)
+![Screenshot (182)](https://github.com/user-attachments/assets/391dfa32-e385-47cc-ba0e-286976045ffa)
+![Screenshot (183)](https://github.com/user-attachments/assets/d2175639-41a7-49ac-a4dc-7abfa8f97ab4)
+
+- The quality gate report was successfully generated.
+![Screenshot (117)](https://github.com/user-attachments/assets/ddcd97bd-b993-4fd0-bbd2-912033c7a3f5)
+
+- A graph displaying the status, along with identified vulnerabilities, will be generated for better visualization. 
+![Screenshot (113)](https://github.com/user-attachments/assets/3d6049d7-27c1-409d-af9b-0dddb5702ec8)
+
+- The Trivy scan report has been sent via email.
+![Screenshot (141)](https://github.com/user-attachments/assets/364bf5b2-89ec-431a-8938-17bd72e3ec73)
+
+- The Docker image has been pushed to DockerHub after the pipeline execution.
+![Screenshot (161)](https://github.com/user-attachments/assets/c6b7d89f-be76-4aae-9cd9-cf5c2cabbb72)
+
+- Trivy image report sent to mail
+![Screenshot (142)](https://github.com/user-attachments/assets/c26b0ecd-68aa-4a81-81e3-e081f1f09f03)
+
+- The Grafana dashboard displays that the Jenkins job was successful.
+![Screenshot (187)](https://github.com/user-attachments/assets/3aebc507-2661-413c-af65-66abed25b6de)
+
+- The screenshot below illustrates that two pods are consistently running to ensure high availability.
+![Screenshot (178)](https://github.com/user-attachments/assets/2e175d8b-788a-4618-ac7c-204d1f1b75aa)
+
+-  Access to the application via the Kubernetes load balancer url.
+![Screenshot (185)](https://github.com/user-attachments/assets/67ceead4-db29-4755-9b31-ab7622c73fd7)
+
+
+## Step 12: Access the Netflix App on the Browser
+- You can see that it has been successfully deployed and you are able to access the Netflix clone.
+![Screenshot (179)](https://github.com/user-attachments/assets/e0ac9eff-d54c-48b5-a575-77c6963f4b31)
+
+-  A notification email was received confirming the successful completion of the build and deploy.
+![Screenshot (184)](https://github.com/user-attachments/assets/016c57c5-660f-4e65-87e1-29e0a76f07ad)
+
+
+**Note:** Once the deployment is successfully executed, remember to delete the clusters or instances to prevent any unnecessary charges and resource consumption.
 
 
 ## Tools and Technologies Used
@@ -1434,6 +1666,10 @@ To successfully achieve this assignment, the following tools and technologies we
 6. **OWASP Dependency-Check**: Identifying and reporting vulnerable dependencies.
 7. **Trivy**: Vulnerability scanning for Docker images.
 8. **Docker**: Containerization of the application.
-9. **Prometheus**: Metrics collection and monitoring.
-10. **Node Exporter**: Exporting server metrics for Prometheus.
-11. **Grafana**: Visualization and monitoring of metrics.
+9. **Terraform**: Infrastructure provisioning and management, specifically for creating and managing AWS EKS clusters.
+10. **Kubernetes**: Orchestration of containerized applications, ensuring high availability and scalability.
+11. **Prometheus**: Metrics collection and monitoring.
+12. **Node Exporter**: Exporting server metrics for Prometheus.
+13. **Grafana**: Visualization and monitoring of metrics.
+
+
